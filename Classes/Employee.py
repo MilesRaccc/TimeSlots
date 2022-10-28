@@ -6,8 +6,13 @@ class Employee:
         self.__name = name
         self.__phone = phone
         self.__position = position
-        self.__work_time_start = datetime.strptime(work_time_start, "%H:%M")
-        self.__work_time_end = datetime.strptime(work_time_end, "%H:%M")
+        try:
+            self.__work_time_start = datetime.strptime(work_time_start, "%H:%M")
+            self.__work_time_end = datetime.strptime(work_time_end, "%H:%M")
+        except ValueError:
+            print("Введено некорректное время. "
+                  "\nРабочее время сотрудника должно быть в числовом виде от 0 до 23 часов и от 0 до 59 минут."
+                  "\nПерепроверьте вводимые данные.")
 
     @property
     def name(self):
@@ -42,7 +47,10 @@ class Employee:
 
     @work_time_start.setter
     def time_start(self, work_time_start):
-        self.__work_time_start = datetime.strptime(work_time_start, "%H:%M")
+        try:
+            self.__work_time_start = datetime.strptime(work_time_start, "%H:%M")
+        except ValueError:
+            print("Введено некорректное время. Рабочее время сотрудника должно быть от 0 до 23 часов и от 0 до 59 минут.")
 
     @property
     def work_time_end(self):
@@ -53,4 +61,7 @@ class Employee:
 
     @work_time_end.setter
     def work_time_end(self, work_time_end):
-        self.__work_time_end = datetime.strptime(work_time_end, "%H:%M")
+        try:
+            self.__work_time_end = datetime.strptime(work_time_end, "%H:%M")
+        except ValueError:
+            print("Введено некорректное время. Рабочее время сотрудника должно быть от 0 до 23 часов и от 0 до 59 минут.")

@@ -41,11 +41,15 @@ class EmployeeTimeSlot(Employee):
             # Конвертируем новое завершающее для слота из чисто минут обратно в часы + минуты и добавляем слот в список
             new_slot_finish = datetime.strptime(f"{new_slot_minutes // 60}:{new_slot_minutes % 60}", "%H:%M")
             self.__slots.append(TimeSlot(new_slot_start, new_slot_finish, True))
+
             # Ставим время старта следующего слота временем финиша текущего
             new_slot_start = new_slot_finish
 
     @property
     def time_slot_duration(self):
+        return self.__time_slot_duration.seconds
+
+    def print_time_slot_duration(self):
         return "{}:{}".format(self.__time_slot_duration.seconds // 3600, (self.__time_slot_duration.seconds//60) % 60)
 
     @time_slot_duration.setter
@@ -70,14 +74,58 @@ class EmployeeTimeSlot(Employee):
                              ", " + f"{time_slot.time_end.hour}:{time_slot.time_end.minute}" + "]")
 
         print("\n".join(times))
+        print("\n")
 
     def get_employee_worktime(self):
         return f"{self.work_time_start_print()} - {self.work_time_end_print()}"
 
-    def take_slot(self, time_slot_start_time_string):
-        time_slot_start_time = datetime.strptime(time_slot_start_time_string, "%H:%M")
+    def take_slot(self, taken_slot_start_time_string):
+        taken_slot_start_time = datetime.strptime(taken_slot_start_time_string, "%H:%M")
         for time_slot in self.__slots:
-            if time_slot.time_start.hour == time_slot_start_time.hour \
-                    and time_slot.time_start.minute == time_slot_start_time.minute:
+            if time_slot.time_start.hour == taken_slot_start_time.hour \
+                    and time_slot.time_start.minute == taken_slot_start_time.minute:
                 time_slot.not_taken = False
                 break
+
+    # Прошу прощения, если вам необходимо было чтобы в качестве параметра нужно было указать имена сотрудников,
+    # а не список их слотов, но у меня не хватило времени.
+    @staticmethod
+    def get_employees_joint_timeslots(employees_list):
+        employee_time_slot_duration = employees_list[0].time_slot_duration
+        for employee in employees_list[1:]:
+            if employee.time_slot_duration != employee_time_slot_duration:
+                print("Время слотов некоторых сотрудников не совпадает. Найти общие слоты не представляется возможным")
+                return
+
+        employees_slots_time_starts = list()
+        for employee in employees_list:
+            time_starts = set()
+            for time_slot in employee.slots:
+                if time_slot.not_taken is True:
+                    time_starts.add(time_slot.time_start)
+            employees_slots_time_starts.append(time_starts)
+
+        result = employees_slots_time_starts[0]
+        for slots in employees_slots_time_starts[1:]:
+            result.intersection_update(slots)
+
+        if len(result) == 0:
+            print("Не было найдено общих слотов для сотрудников.")
+            return
+
+        joint_slots = list()
+        for time in result:
+            time_minutes = time.hour * 60 + time.minute
+            time_minutes = time_minutes + (employee_time_slot_duration // 60)
+            joint_slot_finish = datetime.strptime(f"{time_minutes // 60}:{time_minutes % 60}", "%H:%M")
+            joint_slots.append(TimeSlot(time, joint_slot_finish, True))
+
+        times = list()
+        times.append("Общие свободные слоты для указанных сотрудников")
+
+        for time_slot in joint_slots:
+            times.append("[" + f"{time_slot.time_start.hour}:{time_slot.time_start.minute}" +
+                         ", " + f"{time_slot.time_end.hour}:{time_slot.time_end.minute}" + "]")
+
+        print("\n".join(times))
+        print("\n")
